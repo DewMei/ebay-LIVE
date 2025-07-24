@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>水晶产品定价工具</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background: #f8f8f8;
+    }
+    h2 {
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      text-align: center;
+    }
+    th {
+      background-color: #eee;
+    }
+    input[type="number"] {
+      width: 90px;
+    }
+    .orange {
+      background-color: #ffa726;
+      color: #fff;
+      font-weight: bold;
+    }
+    button {
+      margin-top: 15px;
+      margin-right: 10px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>水晶产品定价工具（支持包装重手动修改）</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>成本 (¥)</th>
+        <th>裸重 (g)</th>
+        <th>包装后重 (g)</th>
+        <th>运费 ($)</th>
+        <th class="orange">平台售价 ($)</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      <!-- 3行输入 -->
+      <tr>
+        <td>1</td>
+        <td><input type="number" class="cost" /></td>
+        <td><input type="number" class="weight" oninput="autoFillPackaging(this)" /></td>
+        <td><input type="number" class="final-weight" /></td>
+        <td class="shipping">-</td>
+        <td class="orange final-price">-</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><input type="number" class="cost" /></td>
+        <td><input type="number" class="weight" oninput="autoFillPackaging(this)" /></td>
+        <td><input type="number" class="final-weight" /></td>
+        <td class="shipping">-</td>
+        <td class="orange final-price">-</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><input type="number" class="cost" /></td>
+        <td><input type="number" class="weight" oninput="autoFillPackaging(this)" /></td>
+        <td><input type="number" class="final-weight" /></td>
+        <td class="shipping">-</td>
+        <td class="orange final-price">-</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <button onclick="calculate()">计算报价</button>
+  <button onclick="clearAll()">清空所有数据</button>
+
+  <script>
+    const RATE = 6.3;
+    const SHIPPING_RATE = 24;
+    const FEE_RATE = 0.16;
+
+    function autoFillPackaging(weightInput) {
+      const weight = parseFloat(weightInput.value);
+      const row = weightInput.closest("tr");
+      const packagingInput = row.querySelector(".final-weight");
+
+      if (!weight) {
+        packagingInput.value = '';
+        return;
+      }
+
+      let finalWeight = 0;
+      if (weight < 50) {
+        finalWeight = 250;
+      } else if (weight < 100) {
+        finalWeight = 250;
+      } else if (weight < 200) {
+        finalWeight = weight * 2;
+      } else if (weight < 500) {
+        finalWeight = weight * 1.8;
+      } else {
+        finalWeight = weight * 1.4;
+      }
+
+      packagingInput.value = Math.round(finalWeight);
+    }
+
+    function calculate() {
+      const rows = document.querySelectorAll("#table-body tr");
+      rows.forEach(row => {
+        const costInput = row.querySelector(".cost");
+        const packagingInput = row.querySelector(".final-weight");
+        const shipCell = row.querySelector(".shipping");
+        const priceCell = row.querySelector(".final-price");
+
+        const cost = parseFloat(costInput.value);
+        const finalWeight = parseFloat(packagingInput.value);
+
+        if (!cost || !finalWeight) {
+          shipCell.textContent = '-';
+          priceCell.textContent = '-';
+          return;
+        }
+
+        const weightKg = finalWeight / 1000;
+        const shipping = weightKg * SHIPPING_RATE;
+        const usdCost = cost * 2 / RATE;
+        const priceBeforeFee = usdCost + shipping;
+        const finalPrice = priceBeforeFee / (1 - FEE_RATE);
+
+        shipCell.textContent = shipping.toFixed(2);
+        priceCell.textContent = finalPrice.toFixed(2);
+      });
+    }
+
+    function clearAll() {
+      const inputs = document.querySelectorAll("input");
+      inputs.forEach(input => input.value = '');
+      document.querySelectorAll(".shipping, .final-price").forEach(cell => cell.textContent = '-');
+    }
+  </script>
+</body>
+</html>
